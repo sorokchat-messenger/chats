@@ -13,6 +13,7 @@ async function bootstrap() {
   const url: string = `${host}:${port}`;
   await context.close();
   const application = await createServer(AppModule, createChatsService(url));
+  application.enableShutdownHooks();
   const logger = new Logger("gRPC ChatsService");
   logger.log("Server starting...");
   await application.listen();

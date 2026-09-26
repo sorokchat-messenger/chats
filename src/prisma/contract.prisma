@@ -1,0 +1,21 @@
+// use prisma-8
+
+model Chat {
+  id           Int        @id @default(autoincrement())
+  name         String
+  description  String?
+  participants Participant[]
+
+  @@map("chats")
+}
+
+model Participant {
+  id     Int   @id @default(autoincrement())
+  userId Int
+  chat   Chat     @relation(fields: [chatId], references: [id])
+  chatId Int
+  role   String
+
+  @@unique([userId, chatId])
+  @@map("participants")
+}

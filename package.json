@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
-    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "contract:emit": "prisma contract emit"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",
@@ -27,8 +28,9 @@
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@prisma/orm-postgres": "^8.0.0-rc.12",
     "@sorokchat-messenger/config": "^1.0.5",
-    "@sorokchat-messenger/microservices": "^1.0.8",
+    "@sorokchat-messenger/microservices": "latest",
     "dotenv": "^18.0.4",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -45,9 +47,11 @@
     "@vitest/coverage-v8": "^4.1.2",
     "oxlint": "^1.58.0",
     "prettier": "^3.4.2",
+    "prisma": "^8.0.0-rc.17",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
-    "typescript": "^6.0.2",
+    "tsx": "^4.23.15",
+    "typescript": "^6",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.1.2"
   }
