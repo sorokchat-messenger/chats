@@ -4,6 +4,7 @@ import { REPOSITORIES } from "./repositories/index.js";
 @Global()
 @Module({
     providers: REPOSITORIES,
-    exports: REPOSITORIES
+    exports: REPOSITORIES,
+    imports: []
 })
 export class DatabaseModule { }

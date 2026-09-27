@@ -3,8 +3,8 @@ import { type ChatModel } from "./chat.model.js";
 export interface IChatsRepository {
     create(chat: ChatModel): Promise<ChatModel>;
     getById(id: number): Promise<ChatModel | null>;
-    getByName(name: string): Promise<ChatModel | null>;
-    update(chat: ChatModel): Promise<void>;
+    getByName(name: string, limit: number, offset: number): Promise<ChatModel[]>;
+    update(chat: ChatModel): Promise<ChatModel | null>;
     delete(id: number): Promise<void>;
 }
 
