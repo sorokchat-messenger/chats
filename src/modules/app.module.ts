@@ -4,6 +4,6 @@ import { DatabaseModule, getConfigOptions } from '../infrastructure/index.js';
 import { ChatsModule } from './chats/index.js';
 
 @Module({
-  imports: [ConfigModule.forRoot(getConfigOptions()), DatabaseModule, ChatsModule],
+  imports: [ConfigModule.forRoot(getConfigOptions()), ChatsModule, DatabaseModule],
 })
 export class AppModule { }
