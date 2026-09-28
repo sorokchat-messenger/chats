@@ -1,5 +1,5 @@
 import { Injectable, Provider } from "@nestjs/common";
-import { ChatModel, CHATS_REPOSITORY_TOKEN, type IChatsRepository } from "../../../modules/chats/index.js";
+import { ChatModel, CHATS_REPOSITORY_TOKEN, ParticipantModel, type IChatsRepository } from "../../../modules/chats/index.js";
 import { ILike, Repository } from "typeorm";
 import { ChatEntity } from "../entities/index.js";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -44,7 +44,18 @@ class ChatsRepository implements IChatsRepository {
     }
 
     private toModel(entity: ChatEntity): ChatModel {
-        return ChatModel.fromStorage(entity.id, entity.name, entity.description);
+        return ChatModel.fromStorage(
+            entity.id,
+            entity.name,
+            entity.participants.map(
+                participant => ParticipantModel.fromStorage(
+                    participant.id,
+                    participant.userId,
+                    participant.role
+                )
+            ),
+            entity.description
+        );
     }
 }
 
