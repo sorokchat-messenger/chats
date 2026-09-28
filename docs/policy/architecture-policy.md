@@ -1,0 +1,1 @@
+# Політика архітектури - Sorokchat Messenger
