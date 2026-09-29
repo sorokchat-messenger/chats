@@ -1,4 +1,4 @@
-import { CHAT_ROLE_HIERARCHY, ChatRole, ChatsCodes } from "@sorokchat-messenger/contracts";
+import { ChatRole } from "@sorokchat-messenger/contracts";
 import { ParticipantModel } from "./participant.model";
 
 export class ChatModel {
@@ -46,21 +46,19 @@ export class ChatModel {
     public addUser(actorId: number, userId: number): void {
         if (actorId === userId) throw new Error("actor can not add self");
         if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
-        if (this._participants.some(participant => participant.userId === userId)) throw Error("User already in chat");
+        if (this.hasParticipant(userId)) throw new Error("User already in chat");
         this._participants.push(ParticipantModel.createMember(userId));
     }
 
     public removeUser(actorId: number, memberId: number): void {
         if (actorId === memberId) throw new Error("actor can not remove self");
         if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
-        const member = this._participants.find(participant => participant.userId === memberId);
-        if (!member) throw new Error("User not in chat");
+        if (!this.hasParticipant(memberId)) throw new Error("User not in chat");
         this._participants = this._participants.filter(participant => participant.userId !== memberId);
     }
 
     public leave(actorId: number): void {
-        const actor = this._participants.find(participant => participant.userId === actorId);
-        if (!actor) throw new Error("actor not found");
+        const actor = this.getParticipant(actorId);
         if (actor.isAdmin && this.countOfAdmins <= 1) throw new Error("Last admin can not leave chat");
         this._participants = this._participants.filter(participant => participant.userId !== actorId);
     }
@@ -68,16 +66,14 @@ export class ChatModel {
     public grant(actorId: number, memberId: number): void {
         if (actorId === memberId) throw new Error("actor can not grant self");
         if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
-        const member = this._participants.find(participant => participant.userId === memberId);
-        if (!member) throw new Error("User not in chat");
+        const member = this.getParticipant(memberId);
         member.changeRole(ChatRole.ADMIN);
     }
 
     public revoke(actorId: number, memberId: number): void {
         if (actorId === memberId) throw new Error("actor can not revoke self");
         if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
-        const member = this._participants.find(participant => participant.userId === memberId);
-        if (!member) throw new Error("User not in chat");
+        const member = this.getParticipant(memberId);
         member.changeRole(ChatRole.MEMBER);
     }
 
@@ -98,5 +94,15 @@ export class ChatModel {
 
     private hasAdmin(userId: number): boolean {
         return this._participants.some(participant => participant.userId === userId && participant.isAdmin);
+    }
+
+    private hasParticipant(userId: number): boolean {
+        return this._participants.some(participant => participant.userId === userId);
+    }
+
+    private getParticipant(userId: number): ParticipantModel {
+        const participant = this._participants.find(participant => participant.userId === userId);
+        if (!participant) throw new Error("Participant not found");
+        return participant;
     }
 }
