@@ -44,19 +44,15 @@ export class ChatModel {
     }
 
     public addUser(actorId: number, userId: number): void {
-        if (actorId === userId) throw new Error("Actor can not add self");
-        const actor = this._participants.find(participant => participant.userId === actorId);
-        if (!actor) throw Error("actor not found");
-        if (!actor.isAdmin) throw new Error("Actor not admin");
+        if (actorId === userId) throw new Error("actor can not add self");
+        if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
         if (this._participants.some(participant => participant.userId === userId)) throw Error("User already in chat");
         this._participants.push(ParticipantModel.createMember(userId));
     }
 
     public removeUser(actorId: number, memberId: number): void {
-        if (actorId === memberId) throw new Error("Actor can not remove self");
-        const actor = this._participants.find(participant => participant.userId === actorId);
-        if (!actor) throw Error("actor not found");
-        if (!actor.isAdmin) throw new Error("Actor not admin");
+        if (actorId === memberId) throw new Error("actor can not remove self");
+        if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
         const member = this._participants.find(participant => participant.userId === memberId);
         if (!member) throw new Error("User not in chat");
         this._participants = this._participants.filter(participant => participant.userId !== memberId);
@@ -70,20 +66,16 @@ export class ChatModel {
     }
 
     public grant(actorId: number, memberId: number): void {
-        if (actorId === memberId) throw new Error("Actor can not grant self");
-        const actor = this._participants.find(participant => participant.userId === actorId);
-        if (!actor) throw new Error("actor not found");
-        if (!actor.isAdmin) throw new Error("Actor not admin");
+        if (actorId === memberId) throw new Error("actor can not grant self");
+        if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
         const member = this._participants.find(participant => participant.userId === memberId);
         if (!member) throw new Error("User not in chat");
         member.changeRole(ChatRole.ADMIN);
     }
 
     public revoke(actorId: number, memberId: number): void {
-        if (actorId === memberId) throw new Error("Actor can not revole self");
-        const actor = this._participants.find(participant => participant.userId === actorId);
-        if (!actor) throw new Error("actor not found");
-        if (!actor.isAdmin) throw new Error("Actor not admin");
+        if (actorId === memberId) throw new Error("actor can not revoke self");
+        if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
         const member = this._participants.find(participant => participant.userId === memberId);
         if (!member) throw new Error("User not in chat");
         member.changeRole(ChatRole.MEMBER);
@@ -102,5 +94,9 @@ export class ChatModel {
         this._name = name;
         this._participants = [...participants];
         this._description = description;
+    }
+
+    private hasAdmin(userId: number): boolean {
+        return this._participants.some(participant => participant.userId === userId && participant.isAdmin);
     }
 }
