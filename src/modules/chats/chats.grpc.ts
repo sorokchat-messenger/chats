@@ -7,7 +7,8 @@ import {
     type DeleteChatRequest,
     type AddMemberToChatRequest,
     type RemoveMemberFromChatRequest,
-    type ChangeRoleRequest
+    type GrantMemberRequest,
+    type RevokeMemberRequest
 } from '@sorokchat-messenger/microservices';
 import { ChatsService } from './chats.service.js';
 
@@ -40,8 +41,13 @@ export class ChatsGrpc {
         return await this.service.removeMember(payload);
     }
 
-    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.CHANGE_ROLE)
-    public async changeRole(@Payload() payload: ChangeRoleRequest): Promise<void> {
-        return await this.service.changeRole(payload);
+    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GRANT_MEMBER)
+    public async grantMember(@Payload() payload: GrantMemberRequest): Promise<void> {
+        return await this.service.grandMember(payload);
+    }
+
+    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GRANT_MEMBER)
+    public async revokeMember(@Payload() payload: RevokeMemberRequest): Promise<void> {
+        return await this.service.revokeMember(payload);
     }
 }

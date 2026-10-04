@@ -9,10 +9,10 @@ import {
     type DeleteChatRequest,
     type AddMemberToChatRequest,
     type RemoveMemberFromChatRequest,
-    type ChangeRoleRequest
+    type GrantMemberRequest,
+    type RevokeMemberRequest
 } from '@sorokchat-messenger/microservices';
 import { ChatModel } from './chat.model.js';
-import { ChatRole } from '@sorokchat-messenger/contracts';
 
 @Injectable()
 export class ChatsService {
@@ -53,11 +53,15 @@ export class ChatsService {
         await this.repository.update(chat);
     }
 
-    public async changeRole(payload: ChangeRoleRequest): Promise<void> {
+    public async grandMember(payload: GrantMemberRequest): Promise<void> {
         const chat = await this.getChatById(payload.chatId);
-        const member = chat.participants.find(participant => participant.userId === payload.userId) || null;
-        if (member === null) throw new RpcException({ code: GrpcStatus.NOT_FOUND, message: "errors.participant.not-found" });
-        member.changeRole(payload.role as ChatRole);
+        chat.grant(payload.actorId, payload.userId);
+        await this.repository.update(chat);
+    }
+
+    public async revokeMember(payload: RevokeMemberRequest): Promise<void> {
+        const chat = await this.getChatById(payload.chatId);
+        chat.revoke(payload.actorId, payload.userId);
         await this.repository.update(chat);
     }
 
