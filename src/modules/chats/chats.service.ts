@@ -25,6 +25,7 @@ export class ChatsService {
 
     public async update(payload: UpdateChatRequest): Promise<void> {
         const chat = await this.getChatById(payload.id);
+        if (chat.hasAdmin(payload.actorId) === false) throw new RpcException({ code: GrpcStatus.NOT_FOUND, message: "errors.chat.access-denied" });
         if (payload.name) {
             chat.name = payload.name;
         }
@@ -36,8 +37,7 @@ export class ChatsService {
 
     public async delete(payload: DeleteChatRequest): Promise<void> {
         const chat = await this.getChatById(payload.id);
-        const isAdmin = chat.hasAdmin(payload.actorId);
-        if (isAdmin === false) throw new RpcException({ code: GrpcStatus.NOT_FOUND, message: "errors.chat.access-denied" });
+        if (chat.hasAdmin(payload.actorId) === false) throw new RpcException({ code: GrpcStatus.NOT_FOUND, message: "errors.chat.access-denied" });
         await this.repository.delete(payload.id);
     }
 
