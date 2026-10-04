@@ -46,7 +46,7 @@ export class ChatsGrpc {
         return await this.service.grandMember(payload);
     }
 
-    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GRANT_MEMBER)
+    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.REVOKE_MEMBER)
     public async revokeMember(@Payload() payload: RevokeMemberRequest): Promise<void> {
         return await this.service.revokeMember(payload);
     }
