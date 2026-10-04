@@ -78,6 +78,10 @@ export class ChatModel {
         member.changeRole(ChatRole.MEMBER);
     }
 
+    public hasAdmin(userId: string): boolean {
+        return this._participants.some(participant => participant.userId === userId && participant.isAdmin);
+    }
+
     public static create(name: string, adminId: string, description: string | null = null): ChatModel {
         return new ChatModel(uuidv7(), name, [ParticipantModel.createAdmin(adminId)], description);
     }
@@ -91,10 +95,6 @@ export class ChatModel {
         this._name = name;
         this._participants = [...participants];
         this._description = description;
-    }
-
-    private hasAdmin(userId: string): boolean {
-        return this._participants.some(participant => participant.userId === userId && participant.isAdmin);
     }
 
     private hasParticipant(userId: string): boolean {
