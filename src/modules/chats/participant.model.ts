@@ -1,21 +1,22 @@
 import { CHAT_ROLE_HIERARCHY, ChatRole } from "@sorokchat-messenger/contracts";
+import { uuidv7 } from "uuidv7";
 
 export class ParticipantModel {
-    private readonly _id: number;
-    private readonly _userId: number;
+    private readonly _id: string;
+    private readonly _userId: string;
     private _role: ChatRole;
 
-    private constructor(id: number, userId: number, role: ChatRole) {
+    private constructor(id: string, userId: string, role: ChatRole) {
         this._id = id;
         this._userId = userId;
         this._role = role;
     }
 
-    public get id(): number {
+    public get id(): string {
         return this._id;
     }
 
-    public get userId(): number {
+    public get userId(): string {
         return this._userId;
     }
 
@@ -35,15 +36,15 @@ export class ParticipantModel {
         this._role = role;
     }
 
-    public static createAdmin(userId: number): ParticipantModel {
-        return new ParticipantModel(null!, userId, ChatRole.ADMIN);
+    public static createAdmin(userId: string): ParticipantModel {
+        return new ParticipantModel(uuidv7(), userId, ChatRole.ADMIN);
     }
 
-    public static createMember(userId: number): ParticipantModel {
-        return new ParticipantModel(null!, userId, ChatRole.MEMBER);
+    public static createMember(userId: string): ParticipantModel {
+        return new ParticipantModel(uuidv7(), userId, ChatRole.MEMBER);
     }
 
-    public static fromStorage(id: number, userId: number, role: ChatRole): ParticipantModel {
+    public static fromStorage(id: string, userId: string, role: ChatRole): ParticipantModel {
         return new ParticipantModel(id, userId, role);
     }
 }

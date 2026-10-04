@@ -1,46 +1,101 @@
-import { Injectable, Provider } from "@nestjs/common";
+import { Injectable, type Provider } from "@nestjs/common";
 import { ChatModel, CHATS_REPOSITORY_TOKEN, ParticipantModel, type IChatsRepository } from "../../../modules/chats/index.js";
-import { ILike, Repository } from "typeorm";
-import { ChatEntity } from "../entities/index.js";
-import { InjectRepository } from "@nestjs/typeorm";
+import { PrismaService } from "../prisma/index.js";
+import { type Participant, type Chat } from "../../../generated/prisma/client.js";
+
+export type ChatEntity = Chat & {
+    participants: Participant[];
+}
 
 @Injectable()
 class ChatsRepository implements IChatsRepository {
-    public constructor(
-        @InjectRepository(ChatEntity)
-        private readonly repository: Repository<ChatEntity>
-    ) { }
+    public constructor(private readonly prisma: PrismaService) { }
 
     public async create(chat: ChatModel): Promise<ChatModel> {
-        const entity = this.repository.create({ name: chat.name, description: chat.description });
-        const saved = await this.repository.save(entity);
-        return this.toModel(saved);
+        const created = await this.prisma.chat.create({
+            data: {
+                name: chat.name,
+                description: chat.description,
+                id: chat.id,
+                participants: {
+                    createMany: {
+                        data: chat.participants.map(participant => ({
+                            id: participant.id,
+                            userId: participant.userId,
+                            role: participant.role
+                        }))
+                    }
+                }
+            }, include: { participants: true }
+        });
+        return this.toModel(created);
     }
 
-    public async getById(id: number): Promise<ChatModel | null> {
-        const candidate = await this.repository.findOneBy({ id });
+    public async getById(id: string): Promise<ChatModel | null> {
+        const candidate = await this.prisma.chat.findUnique({ where: { id }, include: { participants: true } });
         return candidate ? this.toModel(candidate) : null;
     }
 
     public async getByName(name: string, limit: number, offset: number): Promise<ChatModel[]> {
-        const chats = await this.repository.find({
+        const chats = await this.prisma.chat.findMany({
             where: {
-                name: ILike(name)
+                name: {
+                    contains: name,
+                    mode: 'insensitive',
+                }
             },
-            order: { name: "ASC" },
             skip: offset,
-            take: limit
+            take: limit,
+            orderBy: { id: "asc" },
+            include: { participants: true }
         });
         return chats.map(chat => this.toModel(chat));
     }
 
     public async update(chat: ChatModel): Promise<ChatModel | null> {
-        await this.repository.update(chat.id, { name: chat.name, description: chat.description });
-        return await this.getById(chat.id);
+        const incomingUserIds = chat.participants.map(participant => participant.userId);
+        const updated = await this.prisma.$transaction(async transaction => {
+            const exists = await transaction.chat.findUnique({ where: { id: chat.id }, select: { id: true } });
+            if (!exists) return null;
+            await transaction.participant.deleteMany({
+                where: {
+                    chatId: chat.id,
+                    userId: { notIn: incomingUserIds }
+                }
+            });
+            for (const participant of chat.participants) {
+                await transaction.participant.upsert({
+                    where: {
+                        chatId_userId: {
+                            chatId: chat.id,
+                            userId: participant.userId
+                        }
+                    },
+                    create: {
+                        id: participant.id,
+                        chatId: chat.id,
+                        userId: participant.userId,
+                        role: participant.role
+                    },
+                    update: {
+                        role: participant.role
+                    }
+                });
+            }
+            return transaction.chat.update({
+                where: { id: chat.id },
+                data: {
+                    name: chat.name,
+                    description: chat.description,
+                },
+                include: { participants: true }
+            });
+        });
+        return updated ? this.toModel(updated) : null;
     }
 
-    public async delete(id: number): Promise<void> {
-        await this.repository.delete(id);
+    public async delete(id: string): Promise<void> {
+        await this.prisma.chat.deleteMany({ where: { id } });
     }
 
     private toModel(entity: ChatEntity): ChatModel {
