@@ -64,11 +64,11 @@ export class ChatModel {
         this._participants = this._participants.filter(participant => participant.userId !== actorId);
     }
 
-    public grant(actorId: string, memberId: string): void {
+    public grant(actorId: string, memberId: string, role: ChatRole): void {
         if (actorId === memberId) throw new Error("actor can not grant self");
         if (!this.hasAdmin(actorId)) throw new Error("Actor not admin");
         const member = this.getParticipant(memberId);
-        member.changeRole(ChatRole.ADMIN);
+        member.changeRole(role);
     }
 
     public revoke(actorId: string, memberId: string): void {

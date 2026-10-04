@@ -13,6 +13,7 @@ import {
     type RevokeMemberRequest
 } from '@sorokchat-messenger/microservices';
 import { ChatModel } from './chat.model.js';
+import { ChatRole } from '../../generated/prisma/enums.js';
 
 @Injectable()
 export class ChatsService {
@@ -55,7 +56,7 @@ export class ChatsService {
 
     public async grandMember(payload: GrantMemberRequest): Promise<void> {
         const chat = await this.getChatById(payload.chatId);
-        chat.grant(payload.actorId, payload.userId);
+        chat.grant(payload.actorId, payload.userId, payload.role as ChatRole);
         await this.repository.update(chat);
     }
 
