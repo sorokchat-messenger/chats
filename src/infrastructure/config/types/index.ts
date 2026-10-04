@@ -1,5 +1,5 @@
 import { type GrpcConnectionConfig, type BasicConfig } from "@sorokchat-messenger/config";
-import { type DatabaseConfig } from "../schemas";
+import { type DatabaseConfig } from "../schemas/index.js";
 
 export type AllConfigs = {
     basic: BasicConfig;

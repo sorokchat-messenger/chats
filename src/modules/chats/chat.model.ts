@@ -1,5 +1,5 @@
 import { ChatRole } from "@sorokchat-messenger/contracts";
-import { ParticipantModel } from "./participant.model";
+import { ParticipantModel } from "./participant.model.js";
 import { uuidv7 } from "uuidv7";
 
 export class ChatModel {
