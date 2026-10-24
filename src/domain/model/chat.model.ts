@@ -30,7 +30,8 @@ export class Chat {
         return this._name;
     }
 
-    public changeName(name: string): Chat {
+    public changeName(actorId: Id, name: string): Chat {
+        if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         this._name = name;
         return this;
     }
@@ -39,14 +40,13 @@ export class Chat {
         return this._description;
     }
 
-    public clearDescription(): Chat {
-        this._description = null;
-        return this;
-    }
-
-    public changeDescription(description: string): Chat {
-        this._description = description;
-        return this;
+    public changeDescription(actorId: Id, description: string): Chat {
+        if (description.trim().length) {
+            this._description = description.trim();
+            return this;
+        } else {
+            return this.clearDescription();
+        }
     }
 
     public get participants(): Participant[] {
@@ -102,6 +102,11 @@ export class Chat {
 
     private get countOfAdmins(): number {
         return this._participants.filter(participant => participant.isAdmin).length;
+    }
+
+    private clearDescription(): Chat {
+        this._description = null;
+        return this;
     }
 
     private getParticipant(userId: Id): Participant | null {

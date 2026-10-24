@@ -7,10 +7,11 @@ export class UpdateChatUseCase {
     public constructor(@Inject(CHAT_REPOSITORY_TOKEN) private readonly repository: IChatRepository) { }
 
     public async execute(payload: UpdateChatRequest): Promise<UpdateChatResponse> {
+        const actorId = Id.of(payload.actorId)
         const chat = await this.repository.findById(Id.of(payload.id));
         if (chat === null) throw new ChatNotFoundException();
-        if (payload.name) chat.changeName(payload.name);
-        if (payload.description) chat.changeDescription(payload.description);
-        await this.repository.save(chat);
+        if (payload.name !== undefined) chat.changeName(actorId, payload.name);
+        if (payload.description !== undefined) chat.changeDescription(actorId, payload.description);
+        return await this.repository.save(chat);
     }
 }
