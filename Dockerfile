@@ -35,7 +35,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=production-dependencies --chown=nestjs:nodejs /application/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /application/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /application/package.json ./
-COPY --from=builder --chown=nestjs:nodejs /application/src/generated ./src/generated
+COPY --from=builder --chown=nestjs:nodejs /application/src/infrastructure/database/generated ./src/infrastructure/database/generated
 COPY --from=builder --chown=nestjs:nodejs /application/prisma ./prisma
 COPY --from=builder --chown=nestjs:nodejs /application/prisma7.config.ts ./
 COPY --chown=nestjs:nodejs docker-entrypoint.sh ./
