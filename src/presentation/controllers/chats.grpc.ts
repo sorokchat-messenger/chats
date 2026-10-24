@@ -10,7 +10,15 @@ import {
     type GrantMemberRequest,
     type RevokeMemberRequest
 } from '@sorokchat-messenger/microservices';
-import { AddMemberUseCase, CreateChatUseCase, DeleteChatUseCase, UpdateChatUseCase } from '../../application/index.js';
+import {
+    AddMemberUseCase,
+    ChangeMemberRoleUseCase,
+    CreateChatUseCase,
+    DeleteChatUseCase,
+    RemoveMemberUseCase,
+    UpdateChatUseCase
+} from '../../application/index.js';
+import { ChatRole } from '@sorokchat-messenger/contracts';
 
 @GrpcService(CHATS_SERVICE.NAME)
 export class ChatsGrpc {
@@ -18,7 +26,9 @@ export class ChatsGrpc {
         private readonly createChatUseCase: CreateChatUseCase,
         private readonly updateChatUseCase: UpdateChatUseCase,
         private readonly deleteChatUseCase: DeleteChatUseCase,
-        private readonly addMemberUseCase: AddMemberUseCase
+        private readonly addMemberUseCase: AddMemberUseCase,
+        private readonly removeMemberUseCase: RemoveMemberUseCase,
+        private readonly changeMemberRoleUseCase: ChangeMemberRoleUseCase
     ) { }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.CREATE_CHAT)
@@ -43,16 +53,26 @@ export class ChatsGrpc {
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.REMOVE_MEMBER_FROM_CHAT)
     public async removeMember(@Payload() payload: RemoveMemberFromChatRequest): Promise<void> {
-
+        return this.removeMemberUseCase.execute(payload);
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GRANT_MEMBER)
     public async grantMember(@Payload() payload: GrantMemberRequest): Promise<void> {
-
+        return await this.changeMemberRoleUseCase.execude({
+            actorId: payload.actorId,
+            chatId: payload.chatId,
+            userId: payload.userId,
+            role: payload.role as ChatRole
+        })
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.REVOKE_MEMBER)
     public async revokeMember(@Payload() payload: RevokeMemberRequest): Promise<void> {
-
+        return await this.changeMemberRoleUseCase.execude({
+            actorId: payload.actorId,
+            chatId: payload.chatId,
+            userId: payload.userId,
+            role: ChatRole.MEMBER
+        })
     }
 }
