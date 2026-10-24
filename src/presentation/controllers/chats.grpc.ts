@@ -10,13 +10,14 @@ import {
     type GrantMemberRequest,
     type RevokeMemberRequest
 } from '@sorokchat-messenger/microservices';
-import { CreateChatUseCase, UpdateChatUseCase } from '../../application/index.js';
+import { CreateChatUseCase, DeleteChatUseCase, UpdateChatUseCase } from '../../application/index.js';
 
 @GrpcService(CHATS_SERVICE.NAME)
 export class ChatsGrpc {
     public constructor(
         private readonly createChatUseCase: CreateChatUseCase,
-        private readonly updateChatUseCase: UpdateChatUseCase
+        private readonly updateChatUseCase: UpdateChatUseCase,
+        private readonly deleteChatUseCase: DeleteChatUseCase
     ) { }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.CREATE_CHAT)
@@ -26,12 +27,12 @@ export class ChatsGrpc {
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.UPDATE_CHAT)
     public async update(@Payload() payload: UpdateChatRequest): Promise<void> {
-        await this.updateChatUseCase.execute(payload);
+        return await this.updateChatUseCase.execute(payload);
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.DELETE_CHAT)
     public async delete(@Payload() payload: DeleteChatRequest): Promise<void> {
-
+        return await this.deleteChatUseCase.execute(payload);
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.ADD_MEMBER_TO_CHAT)
