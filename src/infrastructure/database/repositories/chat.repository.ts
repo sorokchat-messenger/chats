@@ -32,8 +32,8 @@ class ChatRepository implements IChatRepository {
                     id: { notIn: participantIds }
                 }
             });
-            for (const participant of data.participants) {
-                await transaction.participant.upsert({
+            await Promise.all(data.participants.map(participant => {
+                return transaction.participant.upsert({
                     where: { id: participant.id },
                     create: {
                         id: participant.id,
@@ -45,12 +45,12 @@ class ChatRepository implements IChatRepository {
                         role: participant.role
                     }
                 });
-            }
+            }));
         });
     }
 
     public async findById(id: Id): Promise<Chat | null> {
-        const candidate = await this.prisma.chat.findFirst({ where: { id: id.value }, include: { participants: true } });
+        const candidate = await this.prisma.chat.findUnique({ where: { id: id.value }, include: { participants: true } });
         if (!candidate) return null;
         return this.mapper.toModel(candidate);
     }
