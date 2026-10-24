@@ -1,6 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Chat, CHAT_REPOSITORY_TOKEN, Id, type IChatRepository } from "../../domain/index.js";
-import type { CreateChatRequest, CreateChatResponse } from "../payloads/index.js";
+
+export interface CreateChatRequest {
+    readonly name: string;
+    readonly description: string | null;
+    readonly actorId: string;
+}
+
+export interface CreateChatResponse {
+    id: string;
+}
 
 @Injectable()
 export class CreateChatUseCase {
