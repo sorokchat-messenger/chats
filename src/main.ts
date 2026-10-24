@@ -2,8 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type AllConfigs, getConfigOptions } from './infrastructure/index.js';
 import { createChatsService, createServer } from '@sorokchat-messenger/microservices';
-import { AppModule } from './modules/index.js';
 import { Logger } from '@nestjs/common';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const context = await NestFactory.createApplicationContext(ConfigModule.forRoot(getConfigOptions()));

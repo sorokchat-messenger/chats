@@ -44,6 +44,11 @@ export class Chat {
         return this;
     }
 
+    public changeDescription(description: string): Chat {
+        this._description = description;
+        return this;
+    }
+
     public get participants(): Participant[] {
         return this._participants.map(participant => participant.clone());
     }
