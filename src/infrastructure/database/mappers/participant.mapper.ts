@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Participant as Model } from "../../../domain/index.js";
-import { Participant as Persistence } from "../../../generated/prisma/client.js";
+import { Participant as Persistence } from "../generated/prisma/client.js";
 import { Mapper } from "./mapper.js";
 import { IdMapper } from "./id.mapper.js";
 

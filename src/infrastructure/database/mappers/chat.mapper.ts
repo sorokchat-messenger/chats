@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Chat as Model } from "../../../domain/index.js";
-import { Chat as ChatPersistence, Participant } from "../../../generated/prisma/client.js";
+import { Chat as ChatPersistence, Participant } from "../generated/prisma/client.js";
 import { IdMapper } from "./id.mapper.js";
 import { Mapper } from "./mapper.js";
 import { ParticipantMapper } from "./participant.mapper.js";
