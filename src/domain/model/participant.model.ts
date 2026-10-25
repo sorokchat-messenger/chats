@@ -1,11 +1,12 @@
-import { CHAT_ROLE_HIERARCHY, ChatRole } from "@sorokchat-messenger/contracts";
+import { CHAT_ROLE_HIERARCHY } from "@sorokchat-messenger/contracts";
 import { Id } from "./id.model.js";
+import { Role } from "./role.js";
 
 export class Participant {
     private readonly _id: Id;
     private readonly _userId: Id;
     private readonly _chatId: Id;
-    private _role: ChatRole;
+    private _role: Role;
 
     public get id(): Id {
         return this._id.clone();
@@ -19,16 +20,16 @@ export class Participant {
         return this._chatId.clone();
     }
 
-    public get role(): ChatRole {
+    public get role(): Role {
         return this._role;
     }
 
-    public changeRole(role: ChatRole): Participant {
+    public changeRole(role: Role): Participant {
         this._role = role;
         return this;
     }
 
-    private constructor(id: Id, userId: Id, chatId: Id, role: ChatRole) {
+    private constructor(id: Id, userId: Id, chatId: Id, role: Role) {
         this._id = id;
         this._userId = userId;
         this._chatId = chatId;
@@ -36,11 +37,11 @@ export class Participant {
     }
 
     public get isAdmin(): boolean {
-        return CHAT_ROLE_HIERARCHY.hasRole(ChatRole.ADMIN, this.role);
+        return CHAT_ROLE_HIERARCHY.hasRole(Role.ADMIN, this.role);
     }
 
     public get isMember(): boolean {
-        return CHAT_ROLE_HIERARCHY.hasRole(ChatRole.MEMBER, this.role);
+        return CHAT_ROLE_HIERARCHY.hasRole(Role.MEMBER, this.role);
     }
 
     public equal(other?: Participant | null): boolean {
@@ -52,12 +53,12 @@ export class Participant {
         return Participant.restore(this.id, this.userId, this.chatId, this.role);
     }
 
-    public static create(userId: Id, chatId: Id, role: ChatRole = ChatRole.MEMBER): Participant {
+    public static create(userId: Id, chatId: Id, role: Role = Role.MEMBER): Participant {
         const id = Id.create();
         return new Participant(id, userId, chatId, role);
     }
 
-    public static restore(id: Id, userId: Id, chatId: Id, role: ChatRole): Participant {
+    public static restore(id: Id, userId: Id, chatId: Id, role: Role): Participant {
         return new Participant(id, userId, chatId, role);
     }
 }

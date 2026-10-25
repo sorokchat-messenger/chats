@@ -8,21 +8,34 @@ import {
     type AddMemberToChatRequest,
     type RemoveMemberFromChatRequest,
     type GrantMemberRequest,
-    type RevokeMemberRequest
+    type RevokeMemberRequest,
+    type GetChatsByNameRequest,
+    type GetChatsByNameResponse,
+    type ChatResponse,
+    type ChatRole,
+    type GetChatsByUserResponse,
+    type GetChatsByUserRequest,
 } from '@sorokchat-messenger/microservices';
 import {
     AddMemberUseCase,
     ChangeMemberRoleUseCase,
     CreateChatUseCase,
     DeleteChatUseCase,
+    GetChatsByNameUseCase,
+    GetChatsByUserUseCase,
     RemoveMemberUseCase,
-    UpdateChatUseCase
+    UpdateChatUseCase,
 } from '../../application/index.js';
-import { ChatRole } from '@sorokchat-messenger/contracts';
+import { Chat, Id, Role } from '../../domain/index.js';
+
+const DEFAULT_LIMIT: number = 10;
+const DEFAULT_OFFSET: number = 0;
 
 @GrpcService(CHATS_SERVICE.NAME)
 export class ChatsGrpc {
     public constructor(
+        private readonly getChatsByNameUseCase: GetChatsByNameUseCase,
+        private readonly getChatsByUserUseCase: GetChatsByUserUseCase,
         private readonly createChatUseCase: CreateChatUseCase,
         private readonly updateChatUseCase: UpdateChatUseCase,
         private readonly deleteChatUseCase: DeleteChatUseCase,
@@ -30,6 +43,27 @@ export class ChatsGrpc {
         private readonly removeMemberUseCase: RemoveMemberUseCase,
         private readonly changeMemberRoleUseCase: ChangeMemberRoleUseCase
     ) { }
+
+    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GET_CHATS_BY_NAME)
+    public async getByName(@Payload() payload: GetChatsByNameRequest): Promise<GetChatsByNameResponse> {
+        const response = await this.getChatsByNameUseCase.execute({
+            actorId: Id.of(payload.actorId),
+            limit: payload.limit || DEFAULT_LIMIT,
+            name: payload.name,
+            offset: payload.offset || DEFAULT_OFFSET
+        });
+        return { chats: response.chats.map(chat => this.toPresentation(chat)) }
+    }
+
+    @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GET_CHATS_BY_USER)
+    public async getByUser(@Payload() payload: GetChatsByUserRequest): Promise<GetChatsByUserResponse> {
+        const response = await this.getChatsByUserUseCase.execute({
+            limit: payload.limit || DEFAULT_LIMIT,
+            offset: payload.offset || DEFAULT_OFFSET,
+            userId: Id.of(payload.userId)
+        });
+        return { chats: response.chats.map(chat => this.toPresentation(chat)) }
+    }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.CREATE_CHAT)
     public async create(@Payload() payload: CreateChatRequest): Promise<CreateChatResponse> {
@@ -62,7 +96,7 @@ export class ChatsGrpc {
             actorId: payload.actorId,
             chatId: payload.chatId,
             userId: payload.userId,
-            role: payload.role as ChatRole
+            role: payload.role as Role
         })
     }
 
@@ -72,7 +106,21 @@ export class ChatsGrpc {
             actorId: payload.actorId,
             chatId: payload.chatId,
             userId: payload.userId,
-            role: ChatRole.MEMBER
+            role: Role.MEMBER
         })
+    }
+
+    private toPresentation(chat: Chat): ChatResponse {
+        return {
+            id: chat.id.value,
+            description: chat.description || chat.name,
+            name: chat.name,
+            participants: chat.participants.map(participant => ({
+                displayName: participant.userId.value,
+                login: participant.userId.value,
+                role: participant.role as ChatRole,
+                userId: participant.userId.value
+            }))
+        }
     }
 }

@@ -10,6 +10,44 @@ class ChatRepository implements IChatRepository {
         private readonly mapper: ChatMapper
     ) { }
 
+    public async findByName(name: string, actorId: Id, limit: number, offset: number): Promise<Chat[]> {
+        const chats = await this.prisma.chat.findMany({
+            where: {
+                AND: {
+                    name: {
+                        mode: 'insensitive',
+                        contains: name
+                    },
+                    participants: {
+                        some: {
+                            userId: actorId.value
+                        }
+                    }
+                }
+            },
+            take: limit,
+            skip: offset,
+            include: { participants: true }
+        });
+        return chats.map(chat => this.mapper.toModel(chat));
+    }
+
+    public async findByUser(userId: Id, limit: number, offset: number): Promise<Chat[]> {
+        const chats = await this.prisma.chat.findMany({
+            where: {
+                participants: {
+                    some: {
+                        userId: userId.value
+                    }
+                }
+            },
+            take: limit,
+            skip: offset,
+            include: { participants: true }
+        });
+        return chats.map(chat => this.mapper.toModel(chat));
+    }
+
     public async save(chat: Chat): Promise<void> {
         const data = this.mapper.toPersistence(chat);
         const participantIds = data.participants.map(participant => participant.id);

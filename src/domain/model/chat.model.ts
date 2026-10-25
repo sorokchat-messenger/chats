@@ -1,5 +1,4 @@
 import { Participant } from "./participant.model.js";
-import { ChatRole } from "@sorokchat-messenger/contracts";
 import { Id } from "./id.model.js";
 import {
     NotSelfException,
@@ -8,6 +7,7 @@ import {
     MemberNotFoundException,
     LastAdminException
 } from "../exception/index.js";
+import { Role } from "./role.js";
 
 export class Chat {
     private readonly _id: Id;
@@ -41,6 +41,7 @@ export class Chat {
     }
 
     public changeDescription(actorId: Id, description: string): Chat {
+        if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         if (description.trim().length) {
             this._description = description.trim();
             return this;
@@ -91,7 +92,7 @@ export class Chat {
         return this;
     }
 
-    public changeRole(actorId: Id, userId: Id, role: ChatRole): Chat {
+    public changeRole(actorId: Id, userId: Id, role: Role): Chat {
         if (actorId.equal(userId)) throw new NotSelfException();
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         const participant = this.getParticipant(userId);
@@ -123,7 +124,7 @@ export class Chat {
 
     public static create(name: string, description: string | null, actorId: Id): Chat {
         const id: Id = Id.create();
-        return new Chat(id, name, description, [Participant.create(actorId, id, ChatRole.ADMIN)]);
+        return new Chat(id, name, description, [Participant.create(actorId, id, Role.ADMIN)]);
     }
 
     public static restore(id: Id, name: string, description: string | null, participants: Participant[]): Chat {
