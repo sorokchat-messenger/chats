@@ -1,4 +1,5 @@
 import { uuidv7 } from "uuidv7";
+import { NotIdException } from "../exception/index.js";
 
 export class Id {
     private static readonly UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,7 +29,7 @@ export class Id {
 
     public static of(value?: string | null): Id {
         if (!value || typeof value !== 'string' || value.trim().length === 0 || !this.UUID_REGEX.test(value)) {
-            throw new Error("Invalid Id value");
+            throw new NotIdException();
         }
         return new Id(value);
     }

@@ -5,3 +5,4 @@ export * from './not-self.exception.js';
 export * from './last-admin.exception.js';
 export * from './chat-not-found.exception.js';
 export * from './domain.exception.js';
+export * from './not-id.exception.js';

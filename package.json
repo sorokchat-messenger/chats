@@ -30,7 +30,7 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "7",
     "@sorokchat-messenger/config": "^1.0.5",
-    "@sorokchat-messenger/contracts": "^1.0.24",
+    "@sorokchat-messenger/contracts": "^1.0.28",
     "@sorokchat-messenger/microservices": "latest",
     "dotenv": "^18.0.5",
     "reflect-metadata": "^0.2.2",
