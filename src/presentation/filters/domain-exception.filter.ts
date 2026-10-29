@@ -28,22 +28,28 @@ export class DomainExceptionFilter implements RpcExceptionFilter {
         if (exception instanceof MemberNotFoundException) {
             code = GrpcStatus.NOT_FOUND;
             message = ChatsCodes.PARTICIPANT.NOT_FOUND;
-        } else if (exception instanceof ChatNotFoundException) {
+        }
+        if (exception instanceof ChatNotFoundException) {
             code = GrpcStatus.NOT_FOUND;
             message = ChatsCodes.NOT_FOUND;
-        } else if (exception instanceof MemberNotAdminException) {
+        }
+        if (exception instanceof MemberNotAdminException) {
             code = GrpcStatus.PERMISSION_DENIED;
             message = ChatsCodes.PARTICIPANT.NOT_ADMIN;
-        } else if (exception instanceof MemberAlreadyExistsException) {
+        }
+        if (exception instanceof MemberAlreadyExistsException) {
             code = GrpcStatus.ALREADY_EXISTS;
             message = ChatsCodes.PARTICIPANT.EXISTS;
-        } else if (exception instanceof NotSelfException) {
+        }
+        if (exception instanceof NotSelfException) {
             code = GrpcStatus.INVALID_ARGUMENT;
             message = ChatsCodes.PARTICIPANT.NOT_SELF;
-        } else if (exception instanceof LastAdminException) {
+        }
+        if (exception instanceof LastAdminException) {
             code = GrpcStatus.FAILED_PRECONDITION;
             message = ChatsCodes.PARTICIPANT.LAST_ADMIN;
-        } else if (exception instanceof NotIdException) {
+        }
+        if (exception instanceof NotIdException) {
             code = GrpcStatus.INVALID_ARGUMENT;
             message = ChatsCodes.ID.INCORRECT;
         }
