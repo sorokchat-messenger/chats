@@ -4,7 +4,6 @@ import { type AllConfigs, getConfigOptions } from './infrastructure/index.js';
 import { createChatsService, createServer } from '@sorokchat-messenger/microservices';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module.js';
-import { DomainExceptionFilter } from './presentation/index.js';
 
 async function bootstrap() {
   const context = await NestFactory.createApplicationContext(ConfigModule.forRoot(getConfigOptions()));
@@ -15,7 +14,6 @@ async function bootstrap() {
   await context.close();
   const application = await createServer(AppModule, createChatsService(url));
   application.enableShutdownHooks();
-  application.useGlobalFilters(new DomainExceptionFilter());
   const logger = new Logger("gRPC ChatsService");
   logger.log("Server starting...");
   await application.listen();

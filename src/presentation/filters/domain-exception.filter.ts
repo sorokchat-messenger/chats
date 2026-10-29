@@ -1,5 +1,6 @@
 import {
     Catch,
+    Provider,
     RpcExceptionFilter
 } from "@nestjs/common";
 import {
@@ -19,6 +20,7 @@ import {
 import { GrpcStatus } from "@sorokchat-messenger/microservices";
 import { RpcException } from '@nestjs/microservices';
 import { ChatsCodes, UNKNOWN } from "@sorokchat-messenger/contracts";
+import { APP_FILTER } from "@nestjs/core";
 
 @Catch(DomainException)
 export class DomainExceptionFilter implements RpcExceptionFilter {
@@ -55,4 +57,9 @@ export class DomainExceptionFilter implements RpcExceptionFilter {
         }
         return throwError(() => new RpcException({ code, message }));
     }
+}
+
+export const FILTER_PROVIDER: Provider = {
+    provide: APP_FILTER,
+    useClass: DomainExceptionFilter
 }
