@@ -18,7 +18,6 @@ import {
     throwError
 } from "rxjs";
 import { GrpcStatus } from "@sorokchat-messenger/microservices";
-import { RpcException } from '@nestjs/microservices';
 import { ChatsCodes, UNKNOWN } from "@sorokchat-messenger/contracts";
 import { APP_FILTER } from "@nestjs/core";
 
@@ -55,7 +54,14 @@ export class DomainExceptionFilter implements RpcExceptionFilter {
             code = GrpcStatus.INVALID_ARGUMENT;
             message = ChatsCodes.ID.INCORRECT;
         }
-        return throwError(() => new RpcException({ code, message }));
+        return throwError(() => (
+            {
+                code,
+                status: code,
+                message,
+                details: message
+            }
+        ));
     }
 }
 
