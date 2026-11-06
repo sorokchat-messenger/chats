@@ -6,6 +6,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["chats"]
 }
 
 model Chat {
@@ -15,6 +16,7 @@ model Chat {
   participants Participant[]
 
   @@map("chats")
+  @@schema("chats")
 }
 
 model Participant {
@@ -26,9 +28,12 @@ model Participant {
 
   @@unique([chatId, userId])
   @@map("participants")
+  @@schema("chats")
 }
 
 enum ChatRole {
   MEMBER
   ADMIN
+
+  @@schema("chats")
 }
