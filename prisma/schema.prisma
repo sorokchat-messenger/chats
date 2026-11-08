@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/infrastructure/database/generated/prisma"
+  provider = "prisma-client-js"
   url      = env("DATABASE_URL")
 }
 
@@ -20,13 +19,12 @@ model Chat {
 }
 
 model Participant {
-  id     String   @id @default(uuid(7))
   userId String   @map("user_id")
   chat   Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId String   @map("chat_id")
   role   ChatRole @default(MEMBER)
 
-  @@unique([chatId, userId])
+  @@id([userId, chatId])
   @@map("participants")
   @@schema("chats")
 }

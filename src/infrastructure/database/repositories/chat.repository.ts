@@ -50,7 +50,7 @@ class ChatRepository implements IChatRepository {
 
     public async save(chat: Chat): Promise<void> {
         const data = this.mapper.toPersistence(chat);
-        const participantIds = data.participants.map(participant => participant.id);
+        const activeUserIds = data.participants.map(participant => participant.userId);
         await this.prisma.$transaction(async transaction => {
             await transaction.chat.upsert({
                 where: { id: data.id },
@@ -64,17 +64,27 @@ class ChatRepository implements IChatRepository {
                     description: data.description
                 }
             });
-            await transaction.participant.deleteMany({
-                where: {
-                    chatId: data.id,
-                    id: { notIn: participantIds }
-                }
-            });
+            if (activeUserIds.length > 0) {
+                await transaction.participant.deleteMany({
+                    where: {
+                        chatId: data.id,
+                        userId: { notIn: activeUserIds }
+                    }
+                });
+            } else {
+                await transaction.participant.deleteMany({
+                    where: { chatId: data.id }
+                });
+            }
             await Promise.all(data.participants.map(participant => {
                 return transaction.participant.upsert({
-                    where: { id: participant.id },
+                    where: {
+                        userId_chatId: {
+                            chatId: participant.chatId,
+                            userId: participant.userId
+                        }
+                    },
                     create: {
-                        id: participant.id,
                         userId: participant.userId,
                         chatId: participant.chatId,
                         role: participant.role

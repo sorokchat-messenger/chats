@@ -116,10 +116,10 @@ export class ChatsGrpc {
             description: chat.description || chat.name,
             name: chat.name,
             participants: chat.participants.map(participant => ({
-                displayName: participant.userId.value,
-                login: participant.userId.value,
+                displayName: participant.id.userId.value,
+                login: participant.id.userId.value,
                 role: participant.role.value as ChatRole,
-                userId: participant.userId.value
+                userId: participant.id.userId.value
             }))
         }
     }

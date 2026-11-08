@@ -1,13 +1,13 @@
-import { Id } from "../value-objects/index.js";
+import { ValueObject } from "../value-objects/index.js";
 
-export abstract class Entity<T extends Entity<T>> {
-    private readonly _id: Id;
+export abstract class Entity<T extends Entity<T, Key>, Key extends ValueObject<Key>> {
+    private readonly _id: Key;
 
-    public constructor(id: Id) {
+    public constructor(id: Key) {
         this._id = id;
     }
 
-    public get id(): Id {
+    public get id(): Key {
         return this._id.clone();
     }
 

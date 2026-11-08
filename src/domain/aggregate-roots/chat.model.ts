@@ -1,7 +1,7 @@
 import { AggregateRoot } from '@nestjs/cqrs';
 import { ChatEvent } from "@sorokchat-messenger/shared-events";
 import { Participant } from "../entities/index.js";
-import { Id, Role } from "../value-objects/index.js";
+import { Id, ParticipantId, Role } from "../value-objects/index.js";
 import {
     NotSelfException,
     MemberAlreadyExistsException,
@@ -82,7 +82,7 @@ export class Chat extends AggregateRoot<ChatEvent> {
         if (actorId.equal(userId)) throw new NotSelfException();
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         if (!this.hasParticipant(userId)) throw new MemberNotFoundException();
-        this._participants = this._participants.filter(participant => !participant.userId.equal(userId));
+        this._participants = this._participants.filter(participant => !participant.id.userId.equal(userId));
         return this;
     }
 
@@ -113,7 +113,8 @@ export class Chat extends AggregateRoot<ChatEvent> {
     }
 
     private getParticipant(userId: Id): Participant | null {
-        return this._participants.find(participant => participant.userId.equal(userId) && participant.chatId.equal(this._id)) || null;
+        const participantId = ParticipantId.of(userId, this._id)
+        return this._participants.find(participant => participant.id.equal(participantId)) || null;
     }
 
     public equal(other: Chat): boolean {
