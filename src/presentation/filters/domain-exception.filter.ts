@@ -11,6 +11,7 @@ import {
     MemberNotAdminException,
     MemberNotFoundException,
     NotIdException,
+    NotRoleException,
     NotSelfException
 } from "../../domain/index.js";
 import {
@@ -53,6 +54,10 @@ export class DomainExceptionFilter implements RpcExceptionFilter {
         if (exception instanceof NotIdException) {
             code = GrpcStatus.INVALID_ARGUMENT;
             message = ChatsCodes.ID.INCORRECT;
+        }
+        if (exception instanceof NotRoleException) {
+            code = GrpcStatus.INVALID_ARGUMENT;
+            message = ChatsCodes.ROLE.INCORRECT;
         }
         return throwError(() => (
             {
