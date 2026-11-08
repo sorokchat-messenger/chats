@@ -5,7 +5,10 @@ import {
     ChatEvent,
     ChatInformationUpdatedEvent,
     MessageEvent,
-    ParticipantEvent
+    ParticipantCreatedEvent,
+    ParticipantDeletedEvent,
+    ParticipantEvent,
+    ParticipantUpdatedEvent
 } from "@sorokchat-messenger/shared-events";
 import { Participant } from "../entities/index.js";
 import { Id, ParticipantId, Role } from "../value-objects/index.js";
@@ -41,7 +44,9 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
 
     public changeName(actorId: Id, name: string): Chat {
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
+        if (this._name === name) return this;
         this._name = name;
+        this.applyOnce(new ChatInformationUpdatedEvent(this._id.value));
         return this;
     }
 
@@ -51,8 +56,11 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
 
     public changeDescription(actorId: Id, description: string): Chat {
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
-        if (description.trim().length) {
-            this._description = description.trim();
+        const cleaned = description.trim();
+        if (cleaned === this._description) return this;
+        if (cleaned.length) {
+            this._description = cleaned;
+            this.applyOnce(new ChatInformationUpdatedEvent(this._id.value));
             return this;
         } else {
             return this.clearDescription();
@@ -82,6 +90,7 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         if (this.hasParticipant(userId)) throw new MemberAlreadyExistsException();
         this._participants.push(Participant.create(userId, this._id));
+        this.apply(new ParticipantCreatedEvent(this._id.value, userId.value));
         return this;
     }
 
@@ -90,6 +99,7 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         if (!this.hasParticipant(userId)) throw new MemberNotFoundException();
         this._participants = this._participants.filter(participant => !participant.id.userId.equal(userId));
+        this.apply(new ParticipantDeletedEvent(this._id.value, userId.value));
         return this;
     }
 
@@ -98,6 +108,7 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         if (participant === null) throw new MemberNotFoundException();
         if (participant.isAdmin && this.countOfAdmins <= 1) throw new LastAdminException();
         this._participants = this._participants.filter(old => !old.equal(participant));
+        this.apply(new ParticipantDeletedEvent(this._id.value, actorId.value));
         return this;
     }
 
@@ -107,6 +118,7 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         const participant = this.getParticipant(userId);
         if (participant === null) throw new MemberNotFoundException();
         participant.changeRole(role);
+        this.apply(new ParticipantUpdatedEvent(this._id.value, userId.value));
         return this;
     }
 
@@ -115,13 +127,23 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
     }
 
     private clearDescription(): Chat {
+        if (this._description === null) return this;
         this._description = null;
+        this.applyOnce(new ChatInformationUpdatedEvent(this._id.value));
         return this;
     }
 
     private getParticipant(userId: Id): Participant | null {
         const participantId = ParticipantId.of(userId, this._id)
         return this._participants.find(participant => participant.id.equal(participantId)) || null;
+    }
+
+    public applyOnce(event: ChatEvent | ParticipantEvent | MessageEvent): void {
+        const uncommitedEvents = this.getUncommittedEvents();
+        const alreadyExists = uncommitedEvents.some(current => current.pattern === event.pattern);
+        if (!alreadyExists) {
+            super.apply(event);
+        }
     }
 
     public equal(other: Chat): boolean {
@@ -134,7 +156,9 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
 
     public static create(name: string, description: string | null, actorId: Id): Chat {
         const id: Id = Id.create();
-        return new Chat(id, name, description, [Participant.create(actorId, id, Role.ADMIN)]);
+        const chat = new Chat(id, name, description, [Participant.create(actorId, id, Role.ADMIN)]);
+        chat.applyOnce(new ChatCreatedEvent(id.value));
+        return chat;
     }
 
     public static restore(id: Id, name: string, description: string | null, participants: Participant[]): Chat {
