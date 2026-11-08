@@ -26,13 +26,12 @@ COPY prisma ./prisma/
 
 RUN --mount=type=cache,target=/root/.bun/install/cache \
     bun install --frozen-lockfile --production
-COPY --from=prisma-generator /application/node_modules/.prisma ./node_modules/.prisma
-COPY --from=prisma-generator /application/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=prisma-generator /application/node_modules ./node_modules
 
 FROM node:24-slim AS runner
 WORKDIR /application
 ENV NODE_ENV=production
-
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system --gid 1001 nodejs && \
     useradd --system --uid 1001 nestjs
 COPY --from=production-dependencies --chown=nestjs:nodejs /application/node_modules ./node_modules
