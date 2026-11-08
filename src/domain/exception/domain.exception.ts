@@ -1,5 +1,1 @@
-export class DomainException extends Error {
-    public constructor(message: string) {
-        super(message);
-    }
-}
+export class DomainException extends Error { }

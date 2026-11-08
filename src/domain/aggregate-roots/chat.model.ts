@@ -1,5 +1,7 @@
-import { Participant } from "./participant.model.js";
-import { Id } from "./id.model.js";
+import { AggregateRoot } from '@nestjs/cqrs';
+import { ChatEvent } from "@sorokchat-messenger/shared-events";
+import { Participant } from "../entities/index.js";
+import { Id, Role } from "../value-objects/index.js";
 import {
     NotSelfException,
     MemberAlreadyExistsException,
@@ -7,15 +9,15 @@ import {
     MemberNotFoundException,
     LastAdminException
 } from "../exception/index.js";
-import { Role } from "./role.js";
 
-export class Chat {
+export class Chat extends AggregateRoot<ChatEvent> {
     private readonly _id: Id;
     private _name: string;
     private _description: string | null;
     private _participants: Participant[];
 
     private constructor(id: Id, name: string, description: string | null, participants: Participant[]) {
+        super();
         this._id = id;
         this._name = name;
         this._description = description;

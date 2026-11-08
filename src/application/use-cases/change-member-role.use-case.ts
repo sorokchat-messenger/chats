@@ -1,12 +1,12 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { CHAT_REPOSITORY_TOKEN, ChatNotFoundException, Id, type IChatRepository } from "../../domain/index.js";
+import { CHAT_REPOSITORY_TOKEN, ChatNotFoundException, Id, Role, type IChatRepository } from "../../domain/index.js";
 import { ChatRole } from "../../infrastructure/database/generated/prisma/enums.js";
 
 export interface ChangeMemberRoleRequest {
     chatId: string;
     actorId: string;
     userId: string;
-    role: ChatRole;
+    role: Role;
 }
 
 export type ChangeMemberRoleResponse = void;

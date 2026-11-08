@@ -1,4 +1,5 @@
-import { type Id, type Chat } from "../model/index.js";
+import { Chat } from "../aggregate-roots/index.js";
+import { type Id } from "../value-objects/index.js";
 
 export interface IChatRepository {
     save(chat: Chat): Promise<void>;

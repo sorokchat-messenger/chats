@@ -96,7 +96,7 @@ export class ChatsGrpc {
             actorId: payload.actorId,
             chatId: payload.chatId,
             userId: payload.userId,
-            role: payload.role as Role
+            role: Role.of(payload.role)
         })
     }
 
@@ -118,7 +118,7 @@ export class ChatsGrpc {
             participants: chat.participants.map(participant => ({
                 displayName: participant.userId.value,
                 login: participant.userId.value,
-                role: participant.role as ChatRole,
+                role: participant.role.value as ChatRole,
                 userId: participant.userId.value
             }))
         }

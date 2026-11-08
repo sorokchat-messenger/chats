@@ -1,16 +1,11 @@
 import { CHAT_ROLE_HIERARCHY } from "@sorokchat-messenger/contracts";
-import { Id } from "./id.model.js";
-import { Role } from "./role.js";
+import { Id, Role } from "../value-objects/index.js";
+import { Entity } from "./entity.js";
 
-export class Participant {
-    private readonly _id: Id;
+export class Participant extends Entity<Participant> {
     private readonly _userId: Id;
     private readonly _chatId: Id;
     private _role: Role;
-
-    public get id(): Id {
-        return this._id.clone();
-    }
 
     public get userId(): Id {
         return this._userId.clone();
@@ -21,7 +16,7 @@ export class Participant {
     }
 
     public get role(): Role {
-        return this._role;
+        return this._role.clone();
     }
 
     public changeRole(role: Role): Participant {
@@ -30,23 +25,18 @@ export class Participant {
     }
 
     private constructor(id: Id, userId: Id, chatId: Id, role: Role) {
-        this._id = id;
+        super(id);
         this._userId = userId;
         this._chatId = chatId;
         this._role = role;
     }
 
     public get isAdmin(): boolean {
-        return CHAT_ROLE_HIERARCHY.hasRole(Role.ADMIN, this.role);
+        return CHAT_ROLE_HIERARCHY.hasRole(Role.ADMIN.value, this.role.value);
     }
 
     public get isMember(): boolean {
-        return CHAT_ROLE_HIERARCHY.hasRole(Role.MEMBER, this.role);
-    }
-
-    public equal(other?: Participant | null): boolean {
-        if (!other) return false;
-        return this._id.equal(other.id);
+        return CHAT_ROLE_HIERARCHY.hasRole(Role.MEMBER.value, this.role.value);
     }
 
     public clone(): Participant {
