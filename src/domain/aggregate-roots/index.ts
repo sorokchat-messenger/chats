@@ -1,1 +1,1 @@
-export * from './chat.model.js';
+export * from './chat.aggregate-root.js';

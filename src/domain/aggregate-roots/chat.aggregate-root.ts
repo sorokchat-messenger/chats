@@ -1,5 +1,12 @@
 import { AggregateRoot } from '@nestjs/cqrs';
-import { ChatEvent } from "@sorokchat-messenger/shared-events";
+import {
+    ChatCreatedEvent,
+    ChatDeletedEvent,
+    ChatEvent,
+    ChatInformationUpdatedEvent,
+    MessageEvent,
+    ParticipantEvent
+} from "@sorokchat-messenger/shared-events";
 import { Participant } from "../entities/index.js";
 import { Id, ParticipantId, Role } from "../value-objects/index.js";
 import {
@@ -10,7 +17,7 @@ import {
     LastAdminException
 } from "../exception/index.js";
 
-export class Chat extends AggregateRoot<ChatEvent> {
+export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEvent> {
     private readonly _id: Id;
     private _name: string;
     private _description: string | null;

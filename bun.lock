@@ -335,7 +335,7 @@
 
     "@sorokchat-messenger/core": ["@sorokchat-messenger/core@1.0.0", "", { "peerDependencies": { "prettier": "^3.9.6" } }, "sha512-DxKnCJ4u4TEpU25DAiuXOdY3miI8WelEzxlvCKZJbhdhwXtdqfsnl6W8dRp3HQpiE3xDZqWImkB8TmiBN31/sQ=="],
 
-    "@sorokchat-messenger/microservices": ["@sorokchat-messenger/microservices@1.0.17", "", { "peerDependencies": { "@nestjs/common": "^12.0.1", "@nestjs/core": "^12.0.1", "@nestjs/microservices": "^12.0.1" } }, "sha512-Tu4ZulAUVV2YanNa5GvM+BUwCaHjSvNue3rw9nxj6oaZk6YwWbq2WMCxzstNNdO2nZZ02Sfuew7Ziw++y7GUww=="],
+    "@sorokchat-messenger/microservices": ["@sorokchat-messenger/microservices@1.0.29", "", { "peerDependencies": { "@nestjs/common": "^12.0.1", "@nestjs/core": "^12.0.1", "@nestjs/microservices": "^12.0.1" } }, "sha512-CfAFIVsWpyBlJ/wI0LwRGnGna8fvLi6oO8hzxibB1db8mVrUbugg4q5h2/odSUXmR9bqQ/vlMX5cUxQ6Lf0lHA=="],
 
     "@sorokchat-messenger/shared-events": ["@sorokchat-messenger/shared-events@1.0.4", "", {}, "sha512-bFTlneUnQJ+FgT1MFe9MPKwnHMyfVvhtasJQg7BQayZJugiOo/Uyqb/pDLXgM0WtOWN39KIS12tRmj0qEvOl5Q=="],
 
