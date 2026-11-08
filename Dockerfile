@@ -12,6 +12,8 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 FROM dependencies AS prisma-generator
 COPY prisma ./prisma/
 COPY prisma7.config.ts* ./
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 RUN bunx prisma generate
 
 FROM prisma-generator AS builder
