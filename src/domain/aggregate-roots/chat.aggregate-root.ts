@@ -117,6 +117,7 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         if (!this.hasAdmin(actorId)) throw new MemberNotAdminException();
         const participant = this.getParticipant(userId);
         if (participant === null) throw new MemberNotFoundException();
+        if (participant.role.equal(role)) return this;
         participant.changeRole(role);
         this.apply(new ParticipantUpdatedEvent(this._id.value, userId.value));
         return this;
