@@ -123,6 +123,11 @@ export class Chat extends AggregateRoot<ChatEvent | ParticipantEvent | MessageEv
         return this;
     }
 
+    public delete(): Chat {
+        this.applyOnce(new ChatDeletedEvent(this._id.value));
+        return this;
+    }
+
     private get countOfAdmins(): number {
         return this._participants.filter(participant => participant.isAdmin).length;
     }
