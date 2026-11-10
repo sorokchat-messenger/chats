@@ -1,17 +1,14 @@
 import { Injectable, type Provider } from "@nestjs/common";
 import { PrismaService } from "../prisma/index.js";
-import { ChatMapper } from "../mappers/chat.mapper.js";
-import { Chat, CHAT_REPOSITORY_TOKEN, IChatRepository, type Id } from "../../../domain/index.js";
-import { Participant, type ChatRole } from "@prisma/client";
+import { Chat, CHAT_REPOSITORY_TOKEN, ChatDetails, IChatRepository, Id, Participant as DP, Role } from "../../../domain/index.js";
+import { ChatRole as R } from '@sorokchat-messenger/microservices';
+import { Participant as PP, type ChatRole } from "@prisma/client";
 
 @Injectable()
 class ChatRepository implements IChatRepository {
-    public constructor(
-        private readonly prisma: PrismaService,
-        private readonly mapper: ChatMapper
-    ) { }
+    public constructor(private readonly prisma: PrismaService) { }
 
-    public async findByName(name: string, actorId: Id, limit: number, offset: number): Promise<Chat[]> {
+    public async findByName(name: string, actorId: Id, limit: number, offset: number): Promise<ChatDetails[]> {
         const chats = await this.prisma.chat.findMany({
             where: {
                 AND: {
@@ -30,10 +27,20 @@ class ChatRepository implements IChatRepository {
             skip: offset,
             include: { participants: true }
         });
-        return chats.map(chat => this.mapper.toModel(chat));
+        return chats.map(chat => ({
+            id: chat.id,
+            name: chat.name,
+            description: chat.description ?? chat.name,
+            participants: chat.participants.map(participant => ({
+                userId: participant.userId,
+                login: participant.userId,
+                displayName: participant.userId,
+                role: participant.role as R
+            }))
+        }));
     }
 
-    public async findByUser(userId: Id, limit: number, offset: number): Promise<Chat[]> {
+    public async findByUser(userId: Id, limit: number, offset: number): Promise<ChatDetails[]> {
         const chats = await this.prisma.chat.findMany({
             where: {
                 participants: {
@@ -46,7 +53,17 @@ class ChatRepository implements IChatRepository {
             skip: offset,
             include: { participants: true }
         });
-        return chats.map(chat => this.mapper.toModel(chat));
+        return chats.map(chat => ({
+            id: chat.id,
+            name: chat.name,
+            description: chat.description ?? chat.name,
+            participants: chat.participants.map(participant => ({
+                userId: participant.userId,
+                login: participant.userId,
+                displayName: participant.userId,
+                role: participant.role as R
+            }))
+        }));
     }
 
     public async save(chat: Chat): Promise<void> {
@@ -72,7 +89,7 @@ class ChatRepository implements IChatRepository {
             await this.prisma.$transaction(async transaction => {
                 const updateParticipants = async (chat: Chat): Promise<void> => {
                     const indexesToDelete: { chatId: string, userId: string }[] = [];
-                    const dataToCreate: Participant[] = [];
+                    const dataToCreate: PP[] = [];
                     for (const participant of chat.participants) {
                         if (participant.isDeleted) {
                             indexesToDelete.push({ chatId: participant.id.chatId.value, userId: participant.id.userId.value });
@@ -128,7 +145,16 @@ class ChatRepository implements IChatRepository {
     public async findById(id: Id): Promise<Chat | null> {
         const candidate = await this.prisma.chat.findUnique({ where: { id: id.value }, include: { participants: true } });
         if (!candidate) return null;
-        return this.mapper.toModel(candidate);
+        return Chat.restore(
+            Id.of(candidate.id),
+            candidate.name,
+            candidate.description,
+            candidate.participants.map(participant => DP.restore(
+                Id.of(participant.userId),
+                Id.of(participant.chatId),
+                Role.of(participant.role)
+            ))
+        );
     }
 }
 

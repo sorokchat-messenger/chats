@@ -11,116 +11,98 @@ import {
     type RevokeMemberRequest,
     type GetChatsByNameRequest,
     type GetChatsByNameResponse,
-    type ChatResponse,
-    type ChatRole,
     type GetChatsByUserResponse,
     type GetChatsByUserRequest,
 } from '@sorokchat-messenger/microservices';
+import { Role } from '../../domain/index.js';
+import { CqrsBus } from '../../infrastructure/index.js';
 import {
-    AddMemberUseCase,
-    ChangeMemberRoleUseCase,
-    CreateChatUseCase,
-    DeleteChatUseCase,
-    GetChatsByNameUseCase,
-    GetChatsByUserUseCase,
-    RemoveMemberUseCase,
-    UpdateChatUseCase,
+    AddMemberCommand,
+    type AddMemberResult,
+    ChangeMemberRoleCommand,
+    type ChangeMemberRoleResult,
+    CreateChatCommand, type CreateChatResult,
+    DeleteChatCommand,
+    type DeleteChatResult,
+    GetChatsByNameQuery, type GetChatsByNameResult,
+    GetChatsByUserQuery,
+    RemoveMemberCommand,
+    type RemoveMemberResult,
+    UpdateChatCommand,
+    type UpdateChatResult
 } from '../../application/index.js';
-import { Chat, Id, Role } from '../../domain/index.js';
 
-const DEFAULT_LIMIT: number = 10;
+const DEFAULT_LIMIT: number = -1;
 const DEFAULT_OFFSET: number = 0;
 
 @GrpcService(CHATS_SERVICE.NAME)
 export class ChatsGrpc {
     public constructor(
-        private readonly getChatsByNameUseCase: GetChatsByNameUseCase,
-        private readonly getChatsByUserUseCase: GetChatsByUserUseCase,
-        private readonly createChatUseCase: CreateChatUseCase,
-        private readonly updateChatUseCase: UpdateChatUseCase,
-        private readonly deleteChatUseCase: DeleteChatUseCase,
-        private readonly addMemberUseCase: AddMemberUseCase,
-        private readonly removeMemberUseCase: RemoveMemberUseCase,
-        private readonly changeMemberRoleUseCase: ChangeMemberRoleUseCase
+        private readonly bus: CqrsBus
     ) { }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GET_CHATS_BY_NAME)
     public async getByName(@Payload() payload: GetChatsByNameRequest): Promise<GetChatsByNameResponse> {
-        const response = await this.getChatsByNameUseCase.execute({
-            actorId: Id.of(payload.actorId),
-            limit: payload.limit || DEFAULT_LIMIT,
-            name: payload.name,
-            offset: payload.offset || DEFAULT_OFFSET
-        });
-        return { chats: response.chats.map(chat => this.toPresentation(chat)) }
+        const chats = await this.bus.fetch<GetChatsByNameResult, GetChatsByNameQuery>(
+            new GetChatsByNameQuery(payload.name, payload.limit || DEFAULT_LIMIT, payload.offset || DEFAULT_OFFSET, payload.actorId)
+        );
+        return { chats };
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GET_CHATS_BY_USER)
     public async getByUser(@Payload() payload: GetChatsByUserRequest): Promise<GetChatsByUserResponse> {
-        const response = await this.getChatsByUserUseCase.execute({
-            limit: payload.limit || DEFAULT_LIMIT,
-            offset: payload.offset || DEFAULT_OFFSET,
-            userId: Id.of(payload.userId)
-        });
-        return { chats: response.chats.map(chat => this.toPresentation(chat)) }
+        const chats = await this.bus.fetch<GetChatsByNameResult, GetChatsByUserQuery>(
+            new GetChatsByUserQuery(payload.userId, payload.limit || DEFAULT_LIMIT, payload.offset || DEFAULT_OFFSET)
+        );
+        return { chats }
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.CREATE_CHAT)
     public async create(@Payload() payload: CreateChatRequest): Promise<CreateChatResponse> {
-        return await this.createChatUseCase.execute(payload);
+        return await this.bus.execute<CreateChatResult, CreateChatCommand>(
+            new CreateChatCommand(payload.name, payload.description, payload.actorId)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.UPDATE_CHAT)
     public async update(@Payload() payload: UpdateChatRequest): Promise<void> {
-        return await this.updateChatUseCase.execute(payload);
+        return await this.bus.execute<UpdateChatResult, UpdateChatCommand>(
+            new UpdateChatCommand(payload.id, payload.name || null, payload.description || null, payload.actorId)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.DELETE_CHAT)
     public async delete(@Payload() payload: DeleteChatRequest): Promise<void> {
-        return await this.deleteChatUseCase.execute(payload);
+        return await this.bus.execute<DeleteChatResult, DeleteChatCommand>(
+            new DeleteChatCommand(payload.actorId, payload.id)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.ADD_MEMBER_TO_CHAT)
     public async addMember(@Payload() payload: AddMemberToChatRequest): Promise<void> {
-        return await this.addMemberUseCase.execute(payload);
+        return await this.bus.execute<AddMemberResult, AddMemberCommand>(
+            new AddMemberCommand(payload.chatId, payload.actorId, payload.userId)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.REMOVE_MEMBER_FROM_CHAT)
     public async removeMember(@Payload() payload: RemoveMemberFromChatRequest): Promise<void> {
-        return this.removeMemberUseCase.execute(payload);
+        return await this.bus.execute<RemoveMemberResult, RemoveMemberCommand>(
+            new RemoveMemberCommand(payload.chatId, payload.actorId, payload.userId)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.GRANT_MEMBER)
     public async grantMember(@Payload() payload: GrantMemberRequest): Promise<void> {
-        return await this.changeMemberRoleUseCase.execude({
-            actorId: payload.actorId,
-            chatId: payload.chatId,
-            userId: payload.userId,
-            role: Role.of(payload.role)
-        })
+        return await this.bus.execute<ChangeMemberRoleResult, ChangeMemberRoleCommand>(
+            new ChangeMemberRoleCommand(payload.chatId, payload.actorId, payload.userId, payload.role)
+        );
     }
 
     @GrpcMethod(CHATS_SERVICE.NAME, CHATS_SERVICE.REVOKE_MEMBER)
     public async revokeMember(@Payload() payload: RevokeMemberRequest): Promise<void> {
-        return await this.changeMemberRoleUseCase.execude({
-            actorId: payload.actorId,
-            chatId: payload.chatId,
-            userId: payload.userId,
-            role: Role.MEMBER
-        })
-    }
-
-    private toPresentation(chat: Chat): ChatResponse {
-        return {
-            id: chat.id.value,
-            description: chat.description || chat.name,
-            name: chat.name,
-            participants: chat.participants.map(participant => ({
-                displayName: participant.id.userId.value,
-                login: participant.id.userId.value,
-                role: participant.role.value as ChatRole,
-                userId: participant.id.userId.value
-            }))
-        }
+        return await this.bus.execute<ChangeMemberRoleResult, ChangeMemberRoleCommand>(
+            new ChangeMemberRoleCommand(payload.chatId, payload.actorId, payload.userId, Role.MEMBER.value)
+        );
     }
 }
