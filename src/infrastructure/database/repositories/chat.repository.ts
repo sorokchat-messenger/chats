@@ -1,7 +1,8 @@
 import { Injectable, type Provider } from "@nestjs/common";
 import { PrismaService } from "../prisma/index.js";
 import { ChatMapper } from "../mappers/chat.mapper.js";
-import { Chat, CHAT_REPOSITORY_TOKEN, IChatRepository, Id } from "../../../domain/index.js";
+import { Chat, CHAT_REPOSITORY_TOKEN, IChatRepository, type Id } from "../../../domain/index.js";
+import { Participant, type ChatRole } from "@prisma/client";
 
 @Injectable()
 class ChatRepository implements IChatRepository {
@@ -49,62 +50,85 @@ class ChatRepository implements IChatRepository {
     }
 
     public async save(chat: Chat): Promise<void> {
-        const data = this.mapper.toPersistence(chat);
-        const activeUserIds = data.participants.map(participant => participant.userId);
-        await this.prisma.$transaction(async transaction => {
-            await transaction.chat.upsert({
-                where: { id: data.id },
-                create: {
-                    id: data.id,
-                    name: data.name,
-                    description: data.description
-                },
-                update: {
-                    name: data.name,
-                    description: data.description
+        if (chat.isDeleted) {
+            await this.prisma.chat.deleteMany({ where: { id: chat.id.value } });
+        } else if (chat.isCreated) {
+            await this.prisma.chat.create({
+                data: {
+                    id: chat.id.value,
+                    name: chat.name,
+                    description: chat.description ?? undefined,
+                    participants: {
+                        createMany: {
+                            data: chat.participants.map(participant => ({
+                                userId: participant.id.userId.value,
+                                role: participant.role.value as ChatRole
+                            }))
+                        }
+                    }
                 }
             });
-            if (activeUserIds.length > 0) {
-                await transaction.participant.deleteMany({
-                    where: {
-                        chatId: data.id,
-                        userId: { notIn: activeUserIds }
-                    }
-                });
-            } else {
-                await transaction.participant.deleteMany({
-                    where: { chatId: data.id }
-                });
-            }
-            await Promise.all(data.participants.map(participant => {
-                return transaction.participant.upsert({
-                    where: {
-                        userId_chatId: {
-                            chatId: participant.chatId,
-                            userId: participant.userId
+        } else if (chat.isUpdated) {
+            await this.prisma.$transaction(async transaction => {
+                const updateParticipants = async (chat: Chat): Promise<void> => {
+                    const indexesToDelete: { chatId: string, userId: string }[] = [];
+                    const dataToCreate: Participant[] = [];
+                    for (const participant of chat.participants) {
+                        if (participant.isDeleted) {
+                            indexesToDelete.push({ chatId: participant.id.chatId.value, userId: participant.id.userId.value });
+                        } else if (participant.isCreated) {
+                            dataToCreate.push({
+                                userId: participant.id.userId.value,
+                                chatId: participant.id.chatId.value,
+                                role: participant.role.value as ChatRole
+                            });
+                        } else if (participant.isUpdated) {
+                            await transaction.participant.update({
+                                where: { userId_chatId: { chatId: participant.id.chatId.value, userId: participant.id.userId.value } },
+                                data: {
+                                    role: participant.role.value as ChatRole
+                                }
+                            });
                         }
-                    },
-                    create: {
-                        userId: participant.userId,
-                        chatId: participant.chatId,
-                        role: participant.role
-                    },
-                    update: {
-                        role: participant.role
                     }
-                });
-            }));
-        });
+                    if (indexesToDelete.length) {
+                        await transaction.participant.deleteMany({
+                            where: {
+                                OR: indexesToDelete.map(({ chatId, userId }) => ({
+                                    chatId,
+                                    userId
+                                }))
+                            }
+                        });
+                    }
+                    if (dataToCreate.length) {
+                        await transaction.participant.createMany({
+                            data: dataToCreate
+                        });
+                    }
+                }
+                return await Promise.all(
+                    [
+                        transaction.chat.update({
+                            where: {
+                                id: chat.id.value
+                            },
+                            data: {
+                                name: chat.name,
+                                description: chat.description
+                            }
+                        }),
+                        updateParticipants(chat)
+                    ]
+                );
+            });
+        }
     }
 
     public async findById(id: Id): Promise<Chat | null> {
         const candidate = await this.prisma.chat.findUnique({ where: { id: id.value }, include: { participants: true } });
         if (!candidate) return null;
         return this.mapper.toModel(candidate);
-    }
-
-    public async delete(id: Id): Promise<void> {
-        await this.prisma.chat.deleteMany({ where: { id: id.value } });
     }
 }
 
